@@ -1,0 +1,37 @@
+{
+  "name": "hackmd-intern-syncnote",
+  "version": "1.0.0",
+  "description": "The first intern project of HackMD",
+  "main": "index.js",
+  "scripts": {
+    "test": "karma start",
+    "dev": "webpack --watch -d",
+    "build": "webpack -p"
+  },
+  "keywords": [
+    "sync"
+  ],
+  "author": "f26401004@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jasmine": "^3.3.13",
+    "@types/node": "^12.0.12",
+    "copy-webpack-plugin": "^5.0.3",
+    "jasmine-core": "^3.4.0",
+    "karma": "^4.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-webpack": "^4.0.2",
+    "ts-loader": "^6.0.4",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.2",
+    "webpack": "^4.35.2",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2",
+    "webpack-extension-reloader": "^1.1.0"
+  },
+  "dependencies": {
+    "@types/chrome": "0.0.86",
+    "vue": "^2.6.10"
+  }
+}
