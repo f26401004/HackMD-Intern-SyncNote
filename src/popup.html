@@ -3,10 +3,54 @@
   <head>
     <link rel="stylesheet" type="text/css" href="popup.css">
   </head>
+  <style>
+    #app > div {
+      width: 128px;
+      height: 128px;
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      background-size: 66% 66%;
+    }
+    #app > div[data-available="false"] {
+      filter: grayscale(100%);
+    }
+    #app > div[data-available="true"] {
+      filter: grayscale(0%);
+    }
+    .transfer_button {
+      width: 100%;
+      height: 32px;
+      color: white;
+      background-color: #4a26fd;
+      border-radius: 4px;
+      border: none;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+
+      transition: .1s background-color ease-in-out;
+    }
+    .transfer_button:hover {
+      background-color: #714cfe;
+    }
+    .trandfer_button[data-available="false"] {
+      filter: grayscale(100%);
+    }
+    .trandfer_button[data-available="true"] {
+      filter: grayscale(0%);
+    }
+  </style>
   <body>
-    <h1> Test </h1>
     <div id="app">
-      {{ message }}
+      <div
+        v-bind:data-available="(tabId.gist !== -1 && tabId.markdown !== -1) ? 'true' : 'false'"
+        ref="icon">
+      </div>
+      <button
+        class="transfer_button"
+        v-bind:available="(tabId.gist !== -1 && tabId.markdown !== -1) ? 'true' : 'false'"
+        v-on:click="controlTransfer">
+        {{ transfering ? 'Stop Transfer' : 'Start Transfer' }}
+      </button>
     </div>
     <script src="popup.js"></script>
   </body>

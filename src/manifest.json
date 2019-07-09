@@ -32,5 +32,8 @@
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
+  "web_accessible_resources": [
+    "images/*"
+  ],
   "manifest_version": 2
 }
