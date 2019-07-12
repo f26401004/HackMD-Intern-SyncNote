@@ -42,12 +42,26 @@
   <body>
     <div id="app">
       <div
-        v-bind:data-available="(tabId.gist !== -1 && tabId.markdown !== -1) ? 'true' : 'false'"
+        v-bind:data-available="(tabIds.gist.length > 0 && tabIds.markdown.length > 0) ? 'true' : 'false'"
         ref="icon">
       </div>
+      <select>
+        <option
+          v-for="(iter, index) of tabIds.gist"
+          v-bind:key="`gist-tab-${iter}-${index}`">
+          Gist - {{ iter }}
+        </option>
+      </select>
+      <select>
+        <option
+          v-for="(iter, index) of tabIds.markdown"
+          v-bind:key="`gist-tab-${iter}-${index}`">
+          Markdown-it - {{ iter }}
+        </option>
+      </select>
       <button
         class="transfer_button"
-        v-bind:available="(tabId.gist !== -1 && tabId.markdown !== -1) ? 'true' : 'false'"
+        v-bind:available="(tabIds.gist.length > 0 && tabIds.markdown.length > 0) ? 'true' : 'false'"
         v-on:click="controlTransfer">
         {{ transfering ? 'Stop Transfer' : 'Start Transfer' }}
       </button>

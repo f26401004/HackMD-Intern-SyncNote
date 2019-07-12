@@ -12,3 +12,9 @@ The first intern project of HackMD
 
 #### 2019-07-09 (about 2hr)
 * Start to build the basic communication channel between background/content/popup
+
+#### 2019-07-12 (about 2hr)
+* Refactor the content script and background script
+* channel.ts -> gen instance in background script to deal with communication between tabs
+* clien.ts -> gen instance in content script to deal with the page operation
+* Develop with es2016 feature

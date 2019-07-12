@@ -3,10 +3,13 @@ import Vue from 'vue'
 const app = new Vue({
   el: '#app',
   data: {
-    tabId: {
+    tabIds: {
+      gist: [-1],
+      markdown: [-1]
+    },
+    activeTabs: {
       gist: -1,
-      markdown: -1,
-      current: -1
+      markdown: -1
     },
     transfering: false
   },
@@ -21,9 +24,11 @@ const app = new Vue({
     chrome.runtime.onMessage.addListener((request: IRequest, sender: any) => {
       switch (request.type) {
         case 'config_information':
-          this.tabId.gist = request.options.tabId.gist
-          this.tabId.markdown = request.options.tabId.markdown
-          this.tabId.current = request.options.tabId.current
+          this.tabIds.gist = request.options.gist.slice()
+          this.tabIds.markdown = request.options.markdown.slice()
+          this.transfering = request.options.switch
+          this.activeTabs.gist = request.options.activeTabs.gist
+          this.activeTabs.markdown = request.options.activeTabs.markdown
           break
       }
     })
@@ -42,7 +47,8 @@ const app = new Vue({
       chrome.runtime.sendMessage({
         type: 'transfering',
         options: {
-          switch: type
+          switch: type,
+          activeTabs: this.activeTabs
         }
       })
     }
