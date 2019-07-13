@@ -18,3 +18,8 @@ The first intern project of HackMD
 * channel.ts -> gen instance in background script to deal with communication between tabs
 * clien.ts -> gen instance in content script to deal with the page operation
 * Develop with es2016 feature
+
+#### 2019-07-13 (about 2hr)
+* Add success/failed animation to label the availability of transfering
+* Use Ant-Design to build the popup page
+* Labeling the choosing/transfering tab on favicon

@@ -54,8 +54,22 @@ export default class Channel {
    */
   constructor(maxnum: number) {
     this.maximum = maxnum
+    // config removed event to remove the configuration 
+    chrome.tabs.onRemoved.addListener((tabId: number, removeInfo: any) => {
+      if (this.gistTabs.includes(tabId)) {
+        this.removeGistTab(tabId)
+        if (this.currentActive.gist === tabId) {
+          this.stopTransfering()
+        }
+      } else if (this.markdownTabs.includes(tabId)) {
+        this.removeMarkdownTab(tabId)
+        if (this.currentActive.markdown === tabId) {
+          this.stopTransfering()
+        }
+      }
+    })
   }
-  
+
   /**
    * Add the gist tab id to the gistTabs pool
    * 
@@ -85,7 +99,7 @@ export default class Channel {
     this.markdownTabs.push(id)
     return true
   }
-  
+
   /**
    * Remove the gist tab id to the gistTabs pool
    * 
@@ -149,23 +163,12 @@ export default class Channel {
           }
           break
         /**
-         * tab_deletion
-         * The request message to remove the tab information to channel instance.
-         */
-        case 'tab_deletion':
-          if (request.options.message == 'content_Gist_tab_deleteion') {
-            this.removeGistTab(sender.tab.id)
-          } else if (request.options.message == 'content_Markdown-it_tab_deletion') {
-            this.removeMarkdownTab(sender.tab.id)
-          }
-          break
-        /**
          * get_config
          * The request message to get the current config information.
          */
         case 'get_config':
           chrome.runtime.sendMessage({
-            type: 'config_information', 
+            type: 'config_information',
             options: {
               activeTabs: this.currentActive,
               gist: this.gistTabs,
@@ -218,13 +221,15 @@ export default class Channel {
           })
           break
       }
-      sendResponse({
-        type: 'background',
-        options: {
-          tabId: sender.tab.id,
-          message: 'received'
-        }
-      })  
+      if (sender.tab) {
+        sendResponse({
+          type: 'background',
+          options: {
+            tabId: sender.tab.id,
+            message: 'received'
+          }
+        })
+      }
     })
     return true
   }
@@ -261,10 +266,28 @@ export default class Channel {
    */
   stopTransfering(): boolean {
     if (!this.transfering) {
-      throw 'Transfer do not active!'
+      throw 'Transfer status do not active!'
     }
     this.currentActive.gist = this.currentActive.markdown = -1
     this.transfering = false
+    return true
+  }
+
+  /**
+   * Unchoose all tabs after popup closed
+   */
+  unchooseTabs(): boolean {
+    // if the transfer is ogoing, then return true directly
+    if (this.transfering) {
+      return true
+    }
+    // send unchoose tab message to the client
+    this.gistTabs.forEach(target => {
+      chrome.tabs.sendMessage(target, { type: 'unchoose_tab' })
+    })
+    this.markdownTabs.forEach(target => {
+      chrome.tabs.sendMessage(target, { type: 'unchoose_tab' })
+    })
     return true
   }
 }

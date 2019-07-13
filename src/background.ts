@@ -1,9 +1,12 @@
 import Channel from './lib/channel'
 
-const channel: Channel = new Channel(100)
+// config the channel instance in window
+(window as any).__SYNCNOTE__ = {
+  channel: new Channel(100)
+}
 
 try {
-  channel.startListening()
+  (window as any).__SYNCNOTE__.channel.startListening()
 } catch (error) {
   console.log(error)
 }

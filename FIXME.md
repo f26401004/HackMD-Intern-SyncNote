@@ -1,2 +1,2 @@
-1. Use class to refactor the background/content communication channel
-2. Extract all line string of the gist editor
+1. Use Codemirror to transfer the text from gist to markdown-it
+2. Use just textarea value to transfer the text from markdown-it to gist

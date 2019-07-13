@@ -1,11 +1,17 @@
 import Vue from 'vue'
+import { Button, Select, Badge } from 'ant-design-vue'
+import 'ant-design-vue/dist/antd.css'
+
+Vue.use(Button)
+Vue.use(Select)
+Vue.use(Badge)
 
 const app = new Vue({
   el: '#app',
   data: {
     tabIds: {
-      gist: [-1],
-      markdown: [-1]
+      gist: [] as Array<number>,
+      markdown: [] as Array<number>
     },
     activeTabs: {
       gist: -1,
@@ -24,14 +30,44 @@ const app = new Vue({
     chrome.runtime.onMessage.addListener((request: IRequest, sender: any) => {
       switch (request.type) {
         case 'config_information':
-          this.tabIds.gist = request.options.gist.slice()
-          this.tabIds.markdown = request.options.markdown.slice()
+          this.tabIds = Object.assign({}, {
+            gist: request.options.gist.slice(),
+            markdown: request.options.markdown.slice()
+          })
           this.transfering = request.options.switch
           this.activeTabs.gist = request.options.activeTabs.gist
           this.activeTabs.markdown = request.options.activeTabs.markdown
+          if (!this.transfering) {
+            this.tabIds.gist.forEach(target => {
+              chrome.tabs.sendMessage(target, { type: 'unchoose_tab' })
+            })
+            this.tabIds.markdown.forEach(target => {
+              chrome.tabs.sendMessage(target, { type: 'unchoose_tab' })
+            })
+          }
           break
       }
     })
+    // config the popup page close event
+    console.log(window)
+    const background: any = chrome.extension.getBackgroundPage()
+    window.addEventListener('unload', (event: Event) => {
+        background.__SYNCNOTE__.channel.unchooseTabs()
+    }, true)
+  },
+  watch: {
+    'activeTabs.gist': function (newVal: number, oldVal: number) {
+      chrome.tabs.sendMessage(newVal, { type: 'choose_tab' })
+      if (oldVal !== -1) {
+        chrome.tabs.sendMessage(oldVal, { type: 'unchoose_tab' })
+      }
+    },
+    'activeTabs.markdown': function (newVal: number, oldVal: number) {
+      chrome.tabs.sendMessage(newVal, { type: 'choose_tab' })
+      if (oldVal !== -1) {
+        chrome.tabs.sendMessage(oldVal, { type: 'unchoose_tab' })
+      }
+    }
   },
   methods: {
     controlTransfer: function () {

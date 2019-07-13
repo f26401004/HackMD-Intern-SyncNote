@@ -3,14 +3,79 @@ import randomstring from 'crypto-random-string'
 import './datatype'
 
 export default class GistClient implements Client {
-  Id: number = -1
+  /**
+   * Number representing the client tab number
+   * 
+   * @name Client#id
+   * @type number
+   * @default -1
+   */
+  id: number = -1
+  /**
+   * Array to store all textarea in the page
+   * 
+   * @name Client#textareaPool
+   * @type Array<HTMLTextAreaElement>
+   * @default []
+   */
   textareaPool: Array<HTMLTextAreaElement> = []
+  /**
+   * String id to representing the current focus textarea
+   * 
+   * @name Client#currentEditor
+   * @type string
+   * @default ''
+   */
   currentEditor: string = ''
+  /**
+   * String id to representing the current transfering textarea
+   * 
+   * @name Client#transferingEditor
+   * @type string
+   * @default ''
+   */
   transferingEditor: string = ''
+  /**
+   * Boolean to representing the current transfer status
+   * 
+   * @name Client#transfering
+   * @type boolean
+   * @default false
+   */
   transfering: boolean = false
+  /**
+   * Instance of the connection with transfering target
+   * 
+   * @name Client#port
+   * @type chrome.runtime.Port
+   * @default null
+   */
   port: chrome.runtime.Port | any = null
+  /**
+   * Link HTML element of the favicon
+   * 
+   * @name Client#tabIcon
+   * @type HTMLLinkElement
+   * @default null
+   */
+  tabIcon: HTMLLinkElement | any = null
+  /**
+   * Url of the tab of origin favicon
+   * 
+   * @name Client#tabIconOrig
+   * @type string
+   * @default ''
+   */
+  tabIconOrig: string = 'https://github.githubassets.com/favicon.ico'
+
+  /**
+   * Constructor to create the client instance
+   * 
+   * @constructor
+   * @param {number} id - the client tab id
+   */
   constructor(id: number) {
-    this.Id = id
+    this.id = id
     // send ping message to config the information to channel instance
     chrome.runtime.sendMessage({
       type: 'ping',
@@ -18,8 +83,13 @@ export default class GistClient implements Client {
         message: 'content_Gist_ping'
       }
     })
+    // get link element and icon url
+    this.tabIcon = document.querySelector('.js-site-favicon')
   }
   
+  /**
+   * Find out all textarea HTML element in page
+   */
   detect(): Array<HTMLTextAreaElement> {
     // get all textarea
     const textareas = document.querySelectorAll('textarea')
@@ -41,13 +111,16 @@ export default class GistClient implements Client {
     return this.textareaPool
   }
 
+  /**
+   * Start listening message from popup/background
+   */
   startListening() {
-    console.log(`Gist client ${this.Id} start listening ...`)
+    console.log(`Gist client ${this.id} start listening ...`)
     // config the listener
-    chrome.runtime.onMessage.addListener((request: IRequest, sender: any) => {
+    chrome.runtime.onMessage.addListener((request: IRequest, sender: any, sendResponse: any) => {
       switch (request.type) {
         case 'transfering':
-          if (this.Id !== request.options.activeTabs.gist) {
+          if (this.id !== request.options.activeTabs.gist) {
             return
           }
           this.transfering = request.options.switch
@@ -58,10 +131,30 @@ export default class GistClient implements Client {
             this.port.disconnect()
           }
           break
+        case 'choose_tab':
+          this.tabIcon.setAttribute('href', chrome.extension.getURL("icons/favicon_gist_choose.ico"))
+          break
+        case 'unchoose_tab':
+          this.tabIcon.setAttribute('href', this.tabIconOrig)
+          break
+      }
+      if (sender.tab) {
+        sendResponse({
+          type: `client ${this.id}`,
+          options: {
+            tabId: sender.tab.id,
+            message: 'received'
+          }
+        })
       }
     })
   }
 
+  /**
+   * Transfer the text to target
+   * 
+   * @return {boolean} success?
+   */
   transfer(): boolean {
     if (this.port === null) {
       throw 'The transfer channel has not established!'

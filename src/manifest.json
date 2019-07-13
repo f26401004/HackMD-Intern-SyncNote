@@ -33,7 +33,9 @@
     "128": "icons/icon_128.png"
   },
   "web_accessible_resources": [
-    "images/*"
+    "icons/favicon_gist_choose.ico",
+    "icons/favicon_markdown-it_choose.ico",
+    "icons/favicon_markdown-it_unchoose.ico"
   ],
   "manifest_version": 2
 }

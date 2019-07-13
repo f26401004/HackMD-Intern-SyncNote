@@ -1,15 +1,149 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="popup.css">
   </head>
   <style>
-    #app > div {
-      width: 128px;
-      height: 128px;
+    @import url('https://fonts.googleapis.com/css?family=Noto+Sans+TC&display=swap');
+
+
+    @keyframes scaleAnimation {
+      0% {
+        opacity: 0;
+        transform: scale(1.5);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes drawCircle {
+      0% {
+        stroke-dashoffset: 151px;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes drawCheck {
+      0% {
+        stroke-dashoffset: 36px;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    #success_animation_circle {
+      stroke-dasharray: 151px 151px;
+      stroke: #73AF55;
+    }
+
+    #success_animation_check {
+      stroke-dasharray: 36px 36px;
+      stroke: #73AF55;
+    }
+
+    #success_animation_result {
+      fill: #73AF55;
+      opacity: 0;
+    }
+    #failed_animation_circle {
+      stroke-dasharray: 151px 151px;
+      stroke: #777;
+    }
+    #failed_animation_background {
+      fill: #777;
+      opacity: 0;
+    }
+    #failed_animation_cancel {
+      stroke-dasharray: 36px 36px;
+      stroke: #777;
+    }
+    #failed_animation_result {
+      fill: white;
+      opacity: 0;
+    }
+
+    #success_animation.animated, #failed_animation.animated {
+      animation: 1s ease-out 0s 1 both scaleAnimation;
+    }
+    #success_animation.animated > #success_animation_circle, #failed_animation.animated > #failed_animation_circle {
+      animation: 1s cubic-bezier(0.77, 0, 0.175, 1) 0s 1 both drawCircle,
+                0.3s linear 0.9s 1 both fadeOut;
+    }
+    #success_animation.animated > #success_animation_check,
+    #failed_animation.animated > #failed_animation_cancel {
+      animation: 1s cubic-bezier(0.77, 0, 0.175, 1) 0s 1 both drawCheck,
+                0.3s linear 0.9s 1 both fadeOut;
+    }
+    #success_animation.animated > #success_animation_result,
+    #failed_animation.animated > #failed_animation_result,
+    #failed_animation.animated > #failed_animation_background {
+      animation: 0.3s linear 0.9s both fadeIn;
+    }
+
+    #app {
+      display: grid;
+      grid-template-columns: 100%;
+      grid-template-rows: repeat(3, auto);
+      grid-auto-flow: row;
+      grid-row-gap: 1rem;
+      justify-content: center;
+      justify-items: center;
+      align-content: flex-start;
+      align-items: center;
+      width: 240px;
+
+      padding: 1rem 2rem;
+      box-sizing: border-box;
+
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+    }
+    #app > div.icon {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      justify-items: center;
+      align-content: flex-end;
+      align-items: flex-end;
+      width: 180px;
+      height: 180px;
       background-repeat: no-repeat;
-      background-position: 50% 50%;
-      background-size: 66% 66%;
+      background-position: 50% 40%;
+      background-size: 60% 60%;
+    }
+    #app > div.icon > svg {
+      position: absolute;
+      left: 100px;
+      top: 100px;
+      width: 36px;
+      height: 36px;
+    }
+    #app > div.icon > p.status_text {
+      color: #73AF55;
+      font-size: 0.8rem;
+      font-weight: 300;
     }
     #app > div[data-available="false"] {
       filter: grayscale(100%);
@@ -17,54 +151,118 @@
     #app > div[data-available="true"] {
       filter: grayscale(0%);
     }
-    .transfer_button {
-      width: 100%;
-      height: 32px;
-      color: white;
-      background-color: #4a26fd;
-      border-radius: 4px;
-      border: none;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
-      cursor: pointer;
 
-      transition: .1s background-color ease-in-out;
+    div.sync_selection_container {
+      display: grid;
+      grid-template-columns: 100%;
+      grid-template-rows: repeat(2, auto);
+      grid-row-gap: 1rem;
+      justify-content: center;
+      justify-items: flex-start;
+      align-content: flex-start;
+      align-items: center;
+      width: 100%;
     }
-    .transfer_button:hover {
-      background-color: #714cfe;
+    div.sync_selection_container > section {
+      display: grid;
+      grid-template-columns: 100%;
+      grid-template-rows: repeat(2, auto);
+      grid-row-gap: 4px;
+      justify-content: flex-start;
+      justify-items: flex-start;
+      align-content: flex-start;
+      align-items: center;
+      width: 100%;
     }
-    .trandfer_button[data-available="false"] {
-      filter: grayscale(100%);
-    }
-    .trandfer_button[data-available="true"] {
-      filter: grayscale(0%);
+    div.sync_selection_container > section > label {
+      min-width: 36px;
+      height: 18px;
+      line-height: 18px;
+      border-radius: 4px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      background-color: #757575;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-align: center;
     }
   </style>
   <body>
     <div id="app">
       <div
+        class="icon"
         v-bind:data-available="(tabIds.gist.length > 0 && tabIds.markdown.length > 0) ? 'true' : 'false'"
         ref="icon">
+        <svg 
+          v-if="(tabIds.gist.length > 0 && tabIds.markdown.length > 0)" 
+          id="success_animation"
+          class="animated"
+          xmlns="http://www.w3.org/2000/svg"
+          width="70"
+          height="70"
+          viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="30" fill="white"/>
+          <path id="success_animation_result" fill="#D8D8D8" d="M35,60 C21.1928813,60 10,48.8071187 10,35 C10,21.1928813 21.1928813,10 35,10 C48.8071187,10 60,21.1928813 60,35 C60,48.8071187 48.8071187,60 35,60 Z M23.6332378,33.2260427 L22.3667622,34.7739573 L34.1433655,44.40936 L47.776114,27.6305926 L46.223886,26.3694074 L33.8566345,41.59064 L23.6332378,33.2260427 Z"/>
+          <circle id="success_animation_circle" cx="35" cy="35" r="24" stroke="#979797" stroke-width="2" stroke-linecap="round" fill="transparent"/>
+          <polyline id="success_animation_check" stroke="#979797" stroke-width="2" points="23 34 34 43 47 27" fill="transparent"/>
+        </svg>
+        <svg
+          v-else
+          id="failed_animation"
+          class="animated"
+          xmlns="http://www.w3.org/2000/svg"
+          width="70"
+          height="70"
+          viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="30" fill="white"/>
+          <circle id="failed_animation_background" cx="35" cy="35" r="24" fill="transparent"/>
+          <path id="failed_animation_result" fill="transparent" stroke="white" stroke-width="2" stroke-linecap="round" d="M25 25L45 45M45 25L25 45"/>
+
+          <circle id="failed_animation_circle" fill="transparent" stroke="#D06079" stroke-width="2" cx="35" cy="35" r="24"/>
+          <path id="failed_animation_cancel" fill="transparent" stroke="white" stroke-width="2" stroke-linecap="round" d="M25 25L45 45M45 25L25 45"/>
+          
+          <!-- <line class="failed_animation_cancel" fill="transparent" stroke="#D06079" stroke-width="2" stroke-linecap="round" x1="28" y1="28" x2="42" y2="42"/> -->
+          <!-- <line class="failed_animation_cancel" fill="transparent" stroke="#D06079" stroke-width="2" stroke-linecap="round" x1="42" y1="28" x2="28" y2="42"/> -->
+        </svg>
+        <p class="status_text"> {{ (tabIds.gist.length > 0 && tabIds.markdown.length > 0) ? 'Choose tab to transfer!' : 'Open tab to transfer!' }} </p>
       </div>
-      <select>
-        <option
-          v-for="(iter, index) of tabIds.gist"
-          v-bind:key="`gist-tab-${iter}-${index}`">
-          Gist - {{ iter }}
-        </option>
-      </select>
-      <select>
-        <option
-          v-for="(iter, index) of tabIds.markdown"
-          v-bind:key="`gist-tab-${iter}-${index}`">
-          Markdown-it - {{ iter }}
-        </option>
-      </select>
-      <button
-        class="transfer_button"
-        v-bind:available="(tabIds.gist.length > 0 && tabIds.markdown.length > 0) ? 'true' : 'false'"
+      <div class="sync_selection_container">
+        <section>
+          <label> Gist </label>
+          <a-select
+            style="width: 100%"
+            v-model.number="activeTabs.gist">
+            <a-select-option
+              v-for="(iter, index) of tabIds.gist"
+              v-bind:key="`gist-tab-${iter}-${index}`"
+              v-bind:value="iter">
+              Gist - {{ iter }}
+            </option>
+          </select>
+        </section>
+        <section>
+          <label> Markdown-it </label>
+          <a-select
+            style="width: 100%"
+            v-model.number="activeTabs.markdown">
+            <a-select-option
+              v-for="(iter, index) of tabIds.markdown"
+              v-bind:key="`gist-tab-${iter}-${index}`"
+              v-bind:value="iter">
+              Markdown-it - {{ iter }}
+            </option>
+          </select>
+        </section>
+      </div>
+
+      <a-button
+        type="primary"
+        style="width: 100%;"
+        v-bind:disabled="(activeTabs.gist === -1 || activeTabs.markdown === -1)"
         v-on:click="controlTransfer">
         {{ transfering ? 'Stop Transfer' : 'Start Transfer' }}
-      </button>
+      </a-button>
     </div>
     <script src="popup.js"></script>
   </body>
