@@ -1,6 +1,3 @@
-// import CodeMirror from 'codemirror'
-// const test: any = CodeMirror(document.body.querySelector('textarea') as HTMLTextAreaElement)
-
 import Client from './lib/client'
 import GistClient from './lib/gistClient'
 import MakrdownClient from './lib/makrdownClient'
@@ -16,5 +13,6 @@ window.addEventListener('load', function (this: Window, event: Event) {
       client = new MakrdownClient(res.options.tabId)
     }
     client.startListening()
+    client.detect()
   })
 })

@@ -5,9 +5,10 @@ export default interface Client {
   transferingEditor: string
   transfering: boolean;
   port: chrome.runtime.Port
+  targetTabId: number
   tabIcon: HTMLLinkElement
   tabIconOrig: string
   detect(): Array<HTMLTextAreaElement>
-  transfer(): boolean
+  transfer(text: string): boolean
   startListening(): any
 }

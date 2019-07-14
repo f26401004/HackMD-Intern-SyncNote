@@ -49,7 +49,6 @@ const app = new Vue({
       }
     })
     // config the popup page close event
-    console.log(window)
     const background: any = chrome.extension.getBackgroundPage()
     window.addEventListener('unload', (event: Event) => {
         background.__SYNCNOTE__.channel.unchooseTabs()

@@ -11,7 +11,7 @@ interface IRequestOption {
   gist: Array<number>,
   markdown: Array<number>,
   message: string,
-  value: Array<string>,
+  value: Array<string> | string,
   switch: boolean
 }
 

@@ -52,6 +52,14 @@ export default class markdownEditor implements Client {
    */
   port: chrome.runtime.Port | any = null
   /**
+   * Number of transfer target tab id
+   * 
+   * @name Client#targetTabId
+   * @type number
+   * @default -1
+   */
+  targetTabId: number = -1
+  /**
    * Link HTML element of the favicon
    * 
    * @name Client#tabIcon
@@ -67,6 +75,14 @@ export default class markdownEditor implements Client {
    * @default ''
    */
   tabIconOrig: string = ''
+  /**
+   * Event to detect input
+   * 
+   * @name Client#inputEvent
+   * @type Event
+   * @default null
+   */
+  inputEvent: Event | any = null
 
   /**
    * Constructor to create the client instance
@@ -83,6 +99,7 @@ export default class markdownEditor implements Client {
         message: 'content_Markdown-it_ping'
       }
     })
+    // add the favicon to the page
     this.tabIcon = document.createElement('link')
     this.tabIconOrig = ''
     this.tabIcon.setAttribute('rel', 'icon')
@@ -123,21 +140,39 @@ export default class markdownEditor implements Client {
     // config the listener
     chrome.runtime.onMessage.addListener((request: IRequest, sender: any, sendResponse: any) => {
       switch (request.type) {
+        /**
+         * transfering
+         * The request message to start/stop transfering
+         */
         case 'transfering':
-          if (this.id !== request.options.activeTabs.markdown) {
-            return
-          }
           this.transfering = request.options.switch
           // set up the transfering port to the channel
           if (this.transfering) {
-            this.port = chrome.tabs.connect(request.options.activeTabs.gist, { name: 'markdown_transfering' })
+            this.startTransfer(request.options.tabId)
           } else {
-            this.port.disconnect()
+            this.stopTransfer()
           }
           break
+        /**
+         * transfer_to_makrdown
+         * The request message to transfer the text from Gist to Markdown-it
+         */
+        case 'transfer_to_makrdown':
+          if (request.options.tabId === this.id && this.transfering) {
+            this.textareaPool[0].value = request.options.value as string
+          }
+          break
+        /**
+         * choose_tab
+         * The request message to set the chosed label on favicon
+         */
         case 'choose_tab':
           this.tabIcon.setAttribute('href', chrome.extension.getURL("icons/favicon_markdown-it_choose.ico"))
           break
+        /**
+         * unchoose_tab
+         * The request message to set the unchosed label on favicon
+         */
         case 'unchoose_tab':
           this.tabIcon.setAttribute('href', chrome.extension.getURL("icons/favicon_markdown-it_unchoose.ico"))
           break
@@ -155,16 +190,49 @@ export default class markdownEditor implements Client {
   }
 
   /**
+   * Function to start transfering
+   * 
+   * @param targetTabId 
+   */
+  startTransfer(targetTabId: number) {
+    this.targetTabId = targetTabId
+    this.transferingEditor = this.textareaPool[0].getAttribute('data-sync-id') as string
+    // establish connection port
+    this.port = chrome.runtime.connect({ name: 'markdown_transfering' })
+    // default config input event to the fisrt textarea in textareaPool
+    const self = this
+    this.inputEvent = function (this: HTMLTextAreaElement, event: Event) {
+      self.transfer(this.value)
+    }
+    this.textareaPool[0].addEventListener('input', this.inputEvent)
+  }
+  
+  /**
+   * Function to stop transfering
+   */
+  stopTransfer() {
+    if (this.port === null) {
+      return
+    }
+    this.port.disconnect()
+    this.targetTabId = -1
+    this.transferingEditor = ''
+    this.transfering = false
+    this.textareaPool[0].removeEventListener('input', this.inputEvent)
+  }
+
+  /**
    * Transfer the text to target
+   * 
+   * @param {string} text - The text to transfer
    * 
    * @return {boolean} success?
    */
-  transfer(): boolean {
-    if (this.port === null) {
-      throw 'The transfer channel has not established!'
+  transfer(text: string): boolean {
+    if (this.port === null || !this.transfering) {
+      throw 'The transfer port has not established!'
     }
-    // TODO: send the message to the target gist
-    this.port.postMessage()
+    this.port.postMessage({ tabId: this.targetTabId, text: text })
     return true
   }
 }

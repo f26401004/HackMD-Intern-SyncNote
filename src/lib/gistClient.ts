@@ -1,4 +1,5 @@
 import Client from './client'
+import InjectScript from '../util/injectScript'
 import randomstring from 'crypto-random-string'
 import './datatype'
 
@@ -52,6 +53,14 @@ export default class GistClient implements Client {
    */
   port: chrome.runtime.Port | any = null
   /**
+   * Number of transfer target tab id
+   * 
+   * @name Client#targetTabId
+   * @type number
+   * @default -1
+   */
+  targetTabId: number = -1
+  /**
    * Link HTML element of the favicon
    * 
    * @name Client#tabIcon
@@ -85,6 +94,14 @@ export default class GistClient implements Client {
     })
     // get link element and icon url
     this.tabIcon = document.querySelector('.js-site-favicon')
+    // config window message event from real page to receive the change data gen by CodeMirror
+    window.addEventListener("message", function (this: Window, event: MessageEvent) {
+      if (event.data.type === 'transfer_from_actual_gist') {
+        event.data.type = 'transfer_from_gist'
+        // transfer to the background
+        chrome.runtime.sendMessage(event.data)
+      }
+    }, false);
   }
   
   /**
@@ -119,21 +136,42 @@ export default class GistClient implements Client {
     // config the listener
     chrome.runtime.onMessage.addListener((request: IRequest, sender: any, sendResponse: any) => {
       switch (request.type) {
+        /**
+         * transfering
+         * The request message to start/stop transfering
+         */
         case 'transfering':
-          if (this.id !== request.options.activeTabs.gist) {
-            return
-          }
           this.transfering = request.options.switch
           // set up the transfering port to the channel
           if (this.transfering) {
-            this.port = chrome.tabs.connect(request.options.activeTabs.markdown, { name: 'gist_transfering' })
+            this.startTransfer(request.options.tabId)
           } else {
-            this.port.disconnect()
+            this.stopTransfer()
           }
           break
+        /**
+         * transfer_to_gist
+         * The request message to transfer the text from markdown-it to gist
+         */
+        case 'transfer_to_gist':
+          if (request.options.tabId === this.id && this.transfering) {
+            InjectScript((value: string) => {
+              const editor: any = (document.querySelector('.CodeMirror') as any).CodeMirror
+              editor.setValue(value)
+            }, request.options.value)
+          }
+          break
+        /**
+         * choose_tab
+         * The request message to set the chosed label on favicon
+         */
         case 'choose_tab':
           this.tabIcon.setAttribute('href', chrome.extension.getURL("icons/favicon_gist_choose.ico"))
           break
+        /**
+         * unchoose_tab
+         * The request message to set the unchosed label on favicon
+         */
         case 'unchoose_tab':
           this.tabIcon.setAttribute('href', this.tabIconOrig)
           break
@@ -151,16 +189,82 @@ export default class GistClient implements Client {
   }
 
   /**
+   * Function to start transfering
+   * 
+   * @param targetTabId 
+   */
+  startTransfer(targetTabId: number) {
+    this.targetTabId = targetTabId
+    this.transferingEditor = this.textareaPool[0].getAttribute('data-sync-id') as string
+    // establish connection port
+    this.port = chrome.runtime.connect({ name: 'gist_transfering' })
+    // default config input event to the fisrt textarea in textareaPool by injecting code
+    InjectScript((targetTabId: number) => {
+      // config SYNCNOTE gloabl variable
+      if (!(window as any).__SYNCNOTE__) {
+        (window as any).__SYNCNOTE__ = {
+          changeEvent: (editor: any) => {
+            window.postMessage({
+              type: 'transfer_from_actual_gist',
+              options: {
+                tabId: targetTabId,
+                value: editor.getValue()
+              }
+            }, '*')
+          }
+        }
+      } else {
+        (window as any).__SYNCNOTE__.changeEvent = (editor: any) => {
+          window.postMessage({
+            type: 'transfer_from_actual_gist',
+            options: {
+              tabId: targetTabId,
+              value: editor.getValue()
+            }
+          }, '*')
+        }
+      }
+      // get the actual esitor instance
+      const editor: any = (document.querySelector('.CodeMirror') as any).CodeMirror
+      // set the change event
+      editor.on('change', (window as any).__SYNCNOTE__.changeEvent)
+    }, this.targetTabId)
+  }
+
+  /**
+   * Function to stop transfering
+   */
+  stopTransfer() {
+    if (this.port === null) {
+      return
+    }
+    this.port.disconnect()
+    this.targetTabId = -1
+    this.transferingEditor = ''
+    this.transfering = false
+    InjectScript(() => {
+      // get the actual editor instance
+      const editor: any = (document.querySelector('.CodeMirror') as any).CodeMirror
+      // close the change event
+      editor.off('change', (window as any).__SYNCNOTE__.changeEvent)
+    })
+  }
+
+  /**
    * Transfer the text to target
+   * 
+   * @param {string} text - The text to transfer
    * 
    * @return {boolean} success?
    */
-  transfer(): boolean {
+  transfer(text: string): boolean {
     if (this.port === null) {
-      throw 'The transfer channel has not established!'
+      throw 'The transfer port has not established!'
     }
-    // TODO: send the message to the target markdown
-    this.port.postMessage()
+    this.port.postMessage({
+      tabId: this.targetTabId,
+      text: text
+    })
     return true
   }
 }

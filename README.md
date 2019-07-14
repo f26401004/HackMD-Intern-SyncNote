@@ -23,3 +23,8 @@ The first intern project of HackMD
 * Add success/failed animation to label the availability of transfering
 * Use Ant-Design to build the popup page
 * Labeling the choosing/transfering tab on favicon
+
+#### 2019-07-14 (about 3hr)
+* Use javascript injection to access the CodeMirror to set change event
+* Only Makrdown-it use port to communicate with background while transfering
+* Comment the code

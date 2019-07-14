@@ -182,44 +182,52 @@ export default class Channel {
          * The request message to start/stop transfering
          */
         case 'transfering':
+          this.currentActive.gist = request.options.activeTabs.gist
+          this.currentActive.markdown = request.options.activeTabs.markdown
+          // delivery the message to the other transfering tab
+          chrome.tabs.sendMessage(this.currentActive.gist, {
+            type: 'transfering',
+            options: {
+              switch: request.options.switch,
+              tabId: request.options.activeTabs.markdown
+            }
+          })
+          chrome.tabs.sendMessage(this.currentActive.markdown, {
+            type: 'transfering',
+            options: {
+              switch: request.options.switch,
+              tabId: request.options.activeTabs.gist
+            }
+          })
           if (request.options.switch) {
             this.startTransfering(request.options.activeTabs.gist, request.options.activeTabs.markdown)
           } else {
             this.stopTransfering()
           }
-          // delivery the message to the other transfering tab
-          chrome.runtime.sendMessage({
-            type: 'transfering',
-            options: {
-              switch: request.options.switch
-            }
-          })
         /**
          * transfering_from_gist
          * The request message to transfer the text from gist to markdown-it
          */
         case 'transfer_from_gist':
           // delivery the message to markdown-it
-          chrome.runtime.sendMessage({
+          chrome.tabs.sendMessage(request.options.tabId, {
             type: 'transfer_to_makrdown',
-            options: {
-              value: request.options.value
-            }
+            options: request.options
           })
           break
-        /**
-         * transfering_from_markdown
-         * The request message to transfer the text from markdown-it to gist
-         */
-        case 'transfer_from_makrdown':
-          // delivery the message to gist
-          chrome.runtime.sendMessage({
-            type: 'transfer_to_gist',
-            options: {
-              value: request.options.value
-            }
-          })
-          break
+        // /**
+        //  * transfering_from_markdown
+        //  * The request message to transfer the text from markdown-it to gist
+        //  */
+        // case 'transfer_from_makrdown':
+        //   // delivery the message to gist
+        //   chrome.runtime.sendMessage({
+        //     type: 'transfer_to_gist',
+        //     options: {
+        //       value: request.options.value
+        //     }
+        //   })
+        //   break
       }
       if (sender.tab) {
         sendResponse({
@@ -229,6 +237,24 @@ export default class Channel {
             message: 'received'
           }
         })
+      }
+    })
+    // only Markdown-it use port to communicate with background
+    chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
+      switch (port.name) {
+        case 'markdown_transfering':
+          port.onMessage.addListener(request => {
+            // delivery the message to gist
+            chrome.tabs.sendMessage(request.tabId, {
+              type: 'transfer_to_gist',
+              options: {
+                tabId: request.tabId,
+                value: request.text
+              }
+            })
+            port.postMessage({ status: true })
+          })
+          break
       }
     })
     return true

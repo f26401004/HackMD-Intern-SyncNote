@@ -1,2 +1,2 @@
-1. Use Codemirror to transfer the text from gist to markdown-it
-2. Use just textarea value to transfer the text from markdown-it to gist
+1. Try to use port to send message while transfering from gist
+2. Testing with puppeteer/sinon-chrome
