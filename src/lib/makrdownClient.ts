@@ -96,7 +96,8 @@ export default class markdownEditor implements Client {
     chrome.runtime.sendMessage({
       type: 'ping',
       options: {
-        message: 'content_Markdown-it_ping'
+        message: 'content_Markdown-it_ping',
+        tabId: this.id
       }
     })
     // add the favicon to the page
@@ -148,8 +149,10 @@ export default class markdownEditor implements Client {
           this.transfering = request.options.switch
           // set up the transfering port to the channel
           if (this.transfering) {
+            console.log('Start transfering ...')
             this.startTransfer(request.options.tabId)
           } else {
+            console.log('Stop transfering!')
             this.stopTransfer()
           }
           break

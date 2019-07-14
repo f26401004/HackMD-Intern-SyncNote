@@ -157,9 +157,9 @@ export default class Channel {
          */
         case 'ping':
           if (request.options.message == 'content_Gist_ping') {
-            this.addGistTab(sender.tab.id)
+            this.addGistTab(request.options.tabId)
           } else if (request.options.message == 'content_Markdown-it_ping') {
-            this.addMarkdownTab(sender.tab.id)
+            this.addMarkdownTab(request.options.tabId)
           }
           break
         /**
@@ -182,6 +182,7 @@ export default class Channel {
          * The request message to start/stop transfering
          */
         case 'transfering':
+          console.log('Transfering status changed: ',  request)
           this.currentActive.gist = request.options.activeTabs.gist
           this.currentActive.markdown = request.options.activeTabs.markdown
           // delivery the message to the other transfering tab
@@ -209,11 +210,13 @@ export default class Channel {
          * The request message to transfer the text from gist to markdown-it
          */
         case 'transfer_from_gist':
-          // delivery the message to markdown-it
-          chrome.tabs.sendMessage(request.options.tabId, {
-            type: 'transfer_to_makrdown',
-            options: request.options
-          })
+          if (request.options.tabId) {
+            // delivery the message to markdown-it
+            chrome.tabs.sendMessage(request.options.tabId, {
+              type: 'transfer_to_makrdown',
+              options: request.options
+            })
+          }
           break
         // /**
         //  * transfering_from_markdown
@@ -294,6 +297,12 @@ export default class Channel {
     if (!this.transfering) {
       throw 'Transfer status do not active!'
     }
+    chrome.tabs.sendMessage(this.currentActive.gist, {
+      type: 'unchoose_tab'
+    })
+    chrome.tabs.sendMessage(this.currentActive.markdown, {
+      type: 'unchoose_tab'
+    })
     this.currentActive.gist = this.currentActive.markdown = -1
     this.transfering = false
     return true

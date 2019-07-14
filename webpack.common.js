@@ -1,6 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-const ChromeExtensionReloader = require('webpack-extension-reloader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const DIST_DIR = path.resolve(__dirname, 'dist')
@@ -31,10 +30,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new ChromeExtensionReloader({
-      reloadPage: true,
-      manifest: path.join(SRC_DIR, 'manifest.json')
-    }),
     new webpack.optimize.ModuleConcatenationPlugin(),
     new CopyWebpackPlugin([
       { from: path.join(SRC_DIR, 'manifest.json') },

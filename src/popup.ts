@@ -19,6 +19,30 @@ const app = new Vue({
     },
     transfering: false
   },
+  created: function () {
+    // check all tabs are already configed to the background pool
+    chrome.tabs.query({}, (result) => {
+      result.forEach(target => {
+        if ((target.url as string).indexOf('https://gist.github.com') > -1) {
+          chrome.runtime.sendMessage({
+            type: 'ping',
+            options: {
+              message: 'content_Gist_ping',
+              tabId: target.id
+            }
+          })
+        } else if ((target.url as string).indexOf('https://markdown-it.github.io') > -1) {
+          chrome.runtime.sendMessage({
+            type: 'ping',
+            options: {
+              message: 'content_Markdown-it_ping',
+              tabId: target.id
+            }
+          })
+        }
+      })
+    })
+  },
   mounted: function () {
     // set the div background image
     (this.$refs.icon as HTMLDivElement).setAttribute('style', `background-image: url('${chrome.extension.getURL("icons/icon_128.png")}')`)

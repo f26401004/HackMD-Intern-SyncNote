@@ -228,6 +228,7 @@
         <section>
           <label> Gist </label>
           <a-select
+            v-bind:disabled="transfering"
             style="width: 100%"
             v-model.number="activeTabs.gist">
             <a-select-option
@@ -241,6 +242,7 @@
         <section>
           <label> Markdown-it </label>
           <a-select
+            v-bind:disabled="transfering"
             style="width: 100%"
             v-model.number="activeTabs.markdown">
             <a-select-option

@@ -89,7 +89,8 @@ export default class GistClient implements Client {
     chrome.runtime.sendMessage({
       type: 'ping',
       options: {
-        message: 'content_Gist_ping'
+        message: 'content_Gist_ping',
+        tabId: this.id
       }
     })
     // get link element and icon url
@@ -144,8 +145,10 @@ export default class GistClient implements Client {
           this.transfering = request.options.switch
           // set up the transfering port to the channel
           if (this.transfering) {
+            console.log('Start transfering ...')
             this.startTransfer(request.options.tabId)
           } else {
+            console.log('Stop transfering!', request)
             this.stopTransfer()
           }
           break
@@ -200,6 +203,7 @@ export default class GistClient implements Client {
     this.port = chrome.runtime.connect({ name: 'gist_transfering' })
     // default config input event to the fisrt textarea in textareaPool by injecting code
     InjectScript((targetTabId: number) => {
+      console.log(targetTabId)
       // config SYNCNOTE gloabl variable
       if (!(window as any).__SYNCNOTE__) {
         (window as any).__SYNCNOTE__ = {
@@ -235,10 +239,9 @@ export default class GistClient implements Client {
    * Function to stop transfering
    */
   stopTransfer() {
-    if (this.port === null) {
+    if (!this.transfering) {
       return
     }
-    this.port.disconnect()
     this.targetTabId = -1
     this.transferingEditor = ''
     this.transfering = false
@@ -258,7 +261,7 @@ export default class GistClient implements Client {
    * @return {boolean} success?
    */
   transfer(text: string): boolean {
-    if (this.port === null) {
+    if (this.port === null || !this.transfering) {
       throw 'The transfer port has not established!'
     }
     this.port.postMessage({
