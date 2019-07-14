@@ -42,7 +42,6 @@
   },
   "dependencies": {
     "@types/chrome": "0.0.86",
-    "codemirror": "^5.48.0",
     "crypto-random-string": "^3.0.1",
     "vue": "^2.6.10"
   }

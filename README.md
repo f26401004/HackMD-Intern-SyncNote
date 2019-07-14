@@ -1,6 +1,54 @@
+
+
 # HackMD-Intern-SyncNote
 
-The first intern project of HackMD
+###### tags: `HackMD`, `Intern`, `SyncNote`, `Chrome-extension`, `Gist`, `Markdown-it`
+
+The first intern project of HackMD: **Sync the note between Gist and Markdown-it.**
+
+**Deadline**: 2019-07-15 00:00:00
+
+## Getting Started
+
+### Prerequisites
+||Verion|
+|-|-|
+|[TypeScript](https://www.typescriptlang.org/)|3.5.2|
+|[Webpack](https://webpack.js.org/)|4.35.2|
+|[Vue](https://vuejs.org/)|2.6.10|
+|[Ant-Design-Vue](https://vue.ant.design/docs/vue/introduce/)|1.3.10|
+
+### Step one - Install dependencies
+`npm install` or `npm i`
+
+### Step two - Build
+* `npm run dev` for development
+* `npm run build` for production
+
+The code will be generated in `dist/` directory
+
+### Step three - Load extension
+Open browser -> go to `chrome://extensions/` -> Load unpacked -> Choose the `dist/` directory -> Enjoy!
+
+## Directory structure
+```
+├── src
+    ├── icnos -- Icons of the extension
+    ├── lib
+        ├── channel.ts -- Channel class.
+        ├── client.ts -- Client interface.
+        ├── datatype.ts -- Datatype definition
+        ├── gistClient.ts -- Gist client class.
+        ├── markdownClient.ts -- Markdown-it client class.
+    ├── util
+        └── injectScript.ts -- Injection with custom logic.
+    ├── background.js -- The transmitter to forward messages.
+    ├── content.js -- The injection and initialization of whole SyncNote app
+    ├── manifest.json -- Configuration file of extension
+    ├── popup.html -- Popup page definition
+    ├── popup.ts-- Popup page action definition
+└── dist -- output directory generated from command "npm run build"
+```
 
 ## Development Note
 
