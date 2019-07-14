@@ -10,6 +10,8 @@ The first intern project of HackMD: **Sync the note between Gist and Markdown-it
 
 ## Getting Started
 
+![](https://i.imgur.com/NyCkFSG.gif)
+
 ### Prerequisites
 ||Verion|
 |-|-|
@@ -18,19 +20,19 @@ The first intern project of HackMD: **Sync the note between Gist and Markdown-it
 |[Vue](https://vuejs.org/)|2.6.10|
 |[Ant-Design-Vue](https://vue.ant.design/docs/vue/introduce/)|1.3.10|
 
-### Step one - Install dependencies
+### Step One - Install dependencies
 `npm install` or `npm i`
 
-### Step two - Build
+### Step Two - Build
 * `npm run dev` for development
 * `npm run build` for production
 
 The code will be generated in `dist/` directory
 
-### Step three - Load extension
+### Step Three - Load extension
 Open browser -> go to `chrome://extensions/` -> Load unpacked -> Choose the `dist/` directory -> Enjoy!
 
-## Directory structure
+## Directory Structure
 ```
 ├── src
     ├── icnos -- Icons of the extension
